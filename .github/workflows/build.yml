@@ -1,0 +1,38 @@
+name: Compile check
+
+# Verifies every Swift file compiles on a real macOS runner with Xcode.
+# Signing is off: this proves correctness, it does not produce an installable IPA.
+# (Installable builds need Xcode on a Mac + an Apple ID, see README.)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-check:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_17.app/Contents/Developer || sudo xcode-select -p
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Compile (no signing)
+        run: |
+          xcodebuild build \
+            -project Baskt.xcodeproj \
+            -scheme Baskt \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            | xcpretty || xcodebuild build \
+            -project Baskt.xcodeproj \
+            -scheme Baskt \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY=""
